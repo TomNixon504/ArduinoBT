@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/frameLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#959595"
+    tools:context=".FirstFragment">
+
+    <TextView
+        android:id="@+id/textDisplay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp"
+        android:background="#FFFFFF"
+        android:text="@string/display"
+        android:textAlignment="textStart"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/divider"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="0dp"
+        android:layout_height="5dp"
+        android:background="?android:attr/listDivider"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/passThrough"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/pass_through"
+        android:textColor="#FFFFFF"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/divider"
+        app:layout_constraintVertical_bias="0.19999999" />
+
+    <ImageView
+        android:id="@+id/PassImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/passindicator"
+        app:layout_constraintBottom_toTopOf="@+id/passThrough"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/divider"
+        app:srcCompat="@android:drawable/checkbox_off_background"
+        tools:ignore="ImageContrastCheck" />
+
+    <Button
+        android:id="@+id/SW1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="#474747"
+        android:text="@string/sw_1"
+        android:textColor="#FFFFFF"
+        app:layout_constraintEnd_toStartOf="@+id/LED1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/passThrough" />
+
+    <ImageView
+        android:id="@+id/SW1Image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="31dp"
+        android:contentDescription="@string/sw1indicator"
+        app:layout_constraintEnd_toStartOf="@+id/LED1"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/SW1"
+        app:layout_constraintTop_toBottomOf="@+id/passThrough"
+        app:srcCompat="@android:drawable/checkbox_off_background"
+        tools:ignore="ImageContrastCheck" />
+
+    <Button
+        android:id="@+id/SW2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
+        android:backgroundTint="#474747"
+        android:text="@string/sw_2"
+        android:textColor="#FFFFFF"
+        app:layout_constraintEnd_toStartOf="@+id/LED2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/SW1" />
+
+    <ImageView
+        android:id="@+id/SW2Image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:contentDescription="@string/sw2indicator"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/LED2"
+        app:layout_constraintHorizontal_bias="0.008"
+        app:layout_constraintStart_toEndOf="@+id/SW2"
+        app:layout_constraintTop_toBottomOf="@+id/SW1Image"
+        app:layout_constraintVertical_bias="0.184"
+        app:srcCompat="@android:drawable/checkbox_off_background"
+        tools:ignore="ImageContrastCheck" />
+
+    <Button
+        android:id="@+id/LED1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="116dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/led_1"
+        android:textColor="#FFFFFF"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/SW1"
+        app:layout_constraintTop_toBottomOf="@+id/passThrough"
+        tools:ignore="TextContrastCheck" />
+
+    <ImageView
+        android:id="@+id/LED1Image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="105dp"
+        android:layout_marginTop="31dp"
+        android:layout_marginEnd="5dp"
+        android:contentDescription="@string/led1indicator"
+        app:layout_constraintEnd_toStartOf="@+id/LED1"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/SW1"
+        app:layout_constraintTop_toBottomOf="@+id/passThrough"
+        app:srcCompat="@android:drawable/checkbox_off_background"
+        tools:ignore="ImageContrastCheck" />
+
+    <Button
+        android:id="@+id/LED2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="116dp"
+        android:layout_marginTop="28dp"
+        android:text="@string/led_2"
+        android:textColor="#FFFFFF"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/SW2"
+        app:layout_constraintTop_toBottomOf="@+id/LED1"
+        tools:ignore="TextContrastCheck" />
+
+    <ImageView
+        android:id="@+id/LED2Image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="5dp"
+        android:contentDescription="@string/led2indicator"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/LED2"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@+id/SW2Image"
+        app:layout_constraintTop_toBottomOf="@+id/LED1Image"
+        app:layout_constraintVertical_bias="0.184"
+        app:srcCompat="@android:drawable/checkbox_off_background"
+        tools:ignore="ImageContrastCheck" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
