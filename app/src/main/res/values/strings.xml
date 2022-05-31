@@ -54,4 +54,5 @@
     <string name="led1indicator">led1Indicator</string>
     <string name="led2indicator">led2Indicator</string>
     <string name="passindicator">passIndicator</string>
+    <string name="cancel_button">cancel button</string>
 </resources>

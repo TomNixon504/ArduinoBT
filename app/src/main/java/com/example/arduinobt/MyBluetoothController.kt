@@ -14,12 +14,19 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.content.ContextCompat.startActivity
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
+import androidx.navigation.fragment.findNavController
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import java.util.ArrayList
+import java.util.*
 
 
 // Code to request to enable bluetooth
@@ -44,9 +51,7 @@ private const val CONFIRM_PASS_ON = 0x02
 private const val REQUEST_PASS_OFF = 0x04
 private const val CONFIRM_PASS_OFF = 0x03
 
-class MyBluetoothController : MainActivity(){
-
-    private val viewModel: ItemViewModel by viewModels()
+class MyBluetoothController {
 
     // Booleans to know if the respective element is enabled or disabled
     private var sw1Enabled = false
@@ -65,7 +70,7 @@ class MyBluetoothController : MainActivity(){
     private lateinit var led2Image : ImageView
     private lateinit var passImage : ImageView
     // Bluetooth management
-    private lateinit var mmDevice : BluetoothDevice
+    lateinit var mmDevice : BluetoothDevice
     private lateinit var mmSocket : BluetoothSocket
     private lateinit var mmOutputStream : OutputStream
     private lateinit var mmInputStream : InputStream
@@ -74,9 +79,9 @@ class MyBluetoothController : MainActivity(){
     // If a bluetooth device has been connected
     private var connected = false
     // The name of the default connection
-    private var deviceName : String? = null
+    var deviceName : String? = null
 
-
+    private lateinit var myContext: Context
 
     /** Manages the connections with bluetooth devices */
     private var bluetoothManager: BluetoothManager? = null
@@ -97,37 +102,41 @@ class MyBluetoothController : MainActivity(){
      * @param context - The context of the Activity bluetooth will be used in
      * @param activity - the Activity bluetooth will be used in
      */
-    fun bluetoothSetUp() {
+    fun bluetoothSetUp(contextGiven: Context, activity: FragmentActivity?): ArrayList<BluetoothDevice>? {
         // Bluetooth setup on application launch
+
+        myContext = contextGiven
 
         // When the app starts requests bluetooth permissions if not already granted
         // *Bluetooth permissions are automatically granted most of the time
         if (ActivityCompat.checkSelfPermission(
-                applicationContext,
+                myContext,
                 Manifest.permission.BLUETOOTH_CONNECT
             ) != PackageManager.PERMISSION_GRANTED
         ) {
 
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN),
-                REQUEST_ENABLE_BT
-            )
+            if (activity != null) {
+                ActivityCompat.requestPermissions(
+                    activity,
+                    arrayOf(Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN),
+                    REQUEST_ENABLE_BT
+                )
+            }
         }
 
-        bluetoothManager = getSystemService(applicationContext, BluetoothManager::class.java)
+        bluetoothManager = getSystemService(myContext, BluetoothManager::class.java)
         bluetoothAdapter = bluetoothManager?.adapter
 
         // When the app starts if Bluetooth is inactive it requests to activate it
         //      only if the device supports it
-        if (bluetoothAdapter == null) {
-            Toast.makeText(applicationContext,
+        return if (bluetoothAdapter == null) {
+            Toast.makeText(myContext,
                 "This device doesn't support Bluetooth", Toast.LENGTH_LONG).show()
-            return
+            null
         } else {
             if (bluetoothAdapter?.isEnabled == false) {
                 val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-                startActivity(applicationContext, enableBtIntent, null)
+                startActivity(myContext, enableBtIntent, null)
             }
             findBT()
         }
@@ -136,7 +145,7 @@ class MyBluetoothController : MainActivity(){
     }
 
     @SuppressLint("MissingPermission")
-    private fun findBT() {
+    fun findBT(): ArrayList<BluetoothDevice> {
         // Selects a device to connect
         val devices = bluetoothAdapter!!.bondedDevices
         val list: ArrayList<BluetoothDevice> = ArrayList()
@@ -145,45 +154,54 @@ class MyBluetoothController : MainActivity(){
             for (device in devices) {
                 // Automatically connects to the previously connected device
                 //      unless it isn't currently paired
-                if (device.name == deviceName && deviceName != null) {
+                if (deviceName != null && device.name == deviceName) {
                     mmDevice = device
                     connected = true
-                    Toast.makeText(applicationContext, "Bluetooth Device Found", Toast.LENGTH_LONG).show()
+                    Toast.makeText(myContext, "Bluetooth Device Found", Toast.LENGTH_LONG).show()
                     break
                 }
                 list.add(device)
             }
         }
-        if(list.isNotEmpty()) {
-            // Show user a list of BT devices to allow the user to select a specific device
-            viewModel.selectList(list)
+        return list
+    }
 
-            // TODO: fix this
-            // Send user to the fragment with the list of devices
-            navController.navigate(R.id.action_FirstFragment_to_SecondFragment)
 
-            // Get the user response from the list
-            viewModel.currentDevice.observe(this) { item ->
-                mmDevice = item
-                deviceName = item.name
-            }
-            // Removes all items from the list to save memory
-            viewModel.clearList()
+
+    fun openBT(context: Context) {
+        val uuid: UUID =
+            UUID.fromString(serialPortServiceID)
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            val enableBluetooth = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            enableBluetooth.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(context, enableBluetooth, null)
         }
-        else {
-            // Alert that tells the user to connect to a bluetooth device
-            //      only if there are no paired devices
-            val dialog: AlertDialog.Builder = AlertDialog.Builder(this)
-            dialog.setMessage("No possible connections\nPlease connect to a device")
-            dialog.setTitle("No Devices Found")
-            dialog.setNegativeButton("OK", null)
-//                dialog.setPositiveButton("Connect", DialogInterface.OnClickListener {
-//                        dialog, which ->
-//
-//
-//                })
-            val alertDialog = dialog.create()
-            alertDialog.show()
+        if(connected) {
+            mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid)
+            mmSocket.connect()
+            mmOutputStream = mmSocket.outputStream
+            mmInputStream = mmSocket.inputStream
+            beginListenForData()
+        }
+    }
+
+    fun sendBT(command: Int) {
+        if(connected) {
+            mmOutputStream.write(command)
+            Toast.makeText(myContext, "Sending Data", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    fun closeBT() {
+        if(connected) {
+            stopWorker = true
+            mmOutputStream.close()
+            mmInputStream.close()
+            mmSocket.close()
         }
     }
 
@@ -193,20 +211,152 @@ class MyBluetoothController : MainActivity(){
     fun bluetoothActivate() {
         // If there is no bluetoothAdapter the device doesn't support bluetooth
         if (bluetoothAdapter == null) {
-            Toast.makeText(applicationContext,
+            Toast.makeText(
+                myContext,
                 "This device doesn't support Bluetooth", Toast.LENGTH_LONG).show()
         }
         // If the bluetoothAdapter is not enabled request the user enable bluetooth
         if (bluetoothAdapter?.isEnabled == false) {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            startActivity(applicationContext, enableBtIntent, null)
+            startActivity(myContext, enableBtIntent, null)
         }
     }
 
-    fun sendBT(command: Int) {
-        if(connected) {
-            mmOutputStream.write(command)
-            Toast.makeText(applicationContext, "Sending Data", Toast.LENGTH_LONG).show()
+    private fun beginListenForData() {
+        stopWorker = false
+        val workerThread = Thread {
+            while (!Thread.currentThread().isInterrupted && !stopWorker) {
+                try {
+                    val bytesAvailable = mmInputStream.available()
+                    if (bytesAvailable > 0) {
+                        val packetBytes = ByteArray(bytesAvailable)
+                        mmInputStream.read(packetBytes)
+                        for (i in 0 until bytesAvailable) {
+                            val b = packetBytes[i]
+                            processData(b)
+                            displayChanges()
+                        }
+                    }
+                } catch (ex: IOException) {
+                    stopWorker = true
+                }
+            }
         }
+        workerThread.start()
+    }
+
+    private fun processData(byte: Byte) {
+
+        when(byte.toInt()) {
+            SW1_CLOSED -> {
+                sw1Enabled = false
+            }
+            SW1_OPEN -> {
+                sw1Enabled = true
+            }
+
+            SW2_CLOSED -> {
+                sw2Enabled = false
+            }
+            SW2_OPEN -> {
+                sw2Enabled = true
+            }
+
+            CONFIRM_LED1_ON -> {
+                if (led1Requested) {
+                    led1Enabled = true
+                    led1Requested = false
+                } else {
+                    communicationError()
+                    led1Requested = false
+                }
+            }
+            CONFIRM_LED1_OFF -> {
+                if (led1Requested) {
+                    led1Enabled = false
+                    led1Requested = false
+                } else {
+                    communicationError()
+                    led1Requested = false
+                }
+            }
+
+            CONFIRM_LED2_ON -> {
+                if (led2Requested) {
+                    led2Enabled = true
+                    led2Requested = false
+                } else {
+                    communicationError()
+                    led2Requested = false
+                }
+            }
+
+            CONFIRM_LED2_OFF -> {
+                if (led2Requested) {
+                    led2Enabled = false
+                    led2Requested = false
+                } else {
+                    communicationError()
+                    led2Requested = false
+                }
+            }
+
+            CONFIRM_PASS_ON -> {
+                if (passRequested) {
+                    passEnabled = true
+                    passRequested = false
+                } else {
+                    communicationError()
+                    passRequested = false
+                }
+            }
+
+            CONFIRM_PASS_OFF -> {
+                if (passRequested) {
+                    passEnabled = false
+                    passRequested = false
+                }
+            }
+
+            else -> {
+                communicationError()
+            }
+        }
+
+    }
+
+    private fun displayChanges() {
+        if(!commsError) {
+            if(led1Enabled) {
+                led1Image.setImageResource(androidx.appcompat.R.drawable.btn_checkbox_checked_mtrl)
+            } else {
+                led1Image.setImageResource(androidx.appcompat.R.drawable.btn_checkbox_unchecked_mtrl)
+            }
+            if(led2Enabled) {
+                led2Image.setImageResource(androidx.appcompat.R.drawable.btn_checkbox_checked_mtrl)
+            } else {
+                led2Image.setImageResource(androidx.appcompat.R.drawable.btn_checkbox_unchecked_mtrl)
+            }
+            if(sw1Enabled) {
+                sw1Image.setImageResource(androidx.appcompat.R.drawable.btn_checkbox_checked_mtrl)
+            } else {
+                sw1Image.setImageResource(androidx.appcompat.R.drawable.btn_checkbox_unchecked_mtrl)
+            }
+            if(sw2Enabled) {
+                sw2Image.setImageResource(androidx.appcompat.R.drawable.btn_checkbox_checked_mtrl)
+            } else {
+                sw2Image.setImageResource(androidx.appcompat.R.drawable.btn_checkbox_unchecked_mtrl)
+            }
+            if(passEnabled) {
+                passImage.setImageResource(androidx.appcompat.R.drawable.btn_checkbox_checked_mtrl)
+            } else {
+                passImage.setImageResource(androidx.appcompat.R.drawable.btn_checkbox_unchecked_mtrl)
+            }
+        }
+    }
+
+    private fun communicationError() {
+        //TODO: figure out what to do on communication error
+        commsError = true
     }
 }
